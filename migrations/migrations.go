@@ -42,7 +42,7 @@ func createAccounts() {
 
 		account := Account{
 			Type: "Daily Account",
-			Name: string(users[i].Username + "'s " + "account"),
+			Name: string(users[i].Username + "'s account"),
 			Balance: uint(10000 * int(i + 1)),
 			UserID: user.ID}
 		db.Create(&account)
