@@ -9,6 +9,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/jessicaramsa/fintech-banking-app/helpers"
+	"github.com/jessicaramsa/fintech-banking-app/interfaces"
 	"github.com/jessicaramsa/fintech-banking-app/users"
 )
 
@@ -23,50 +24,58 @@ type Register struct {
 	Password string
 }
 
-type ErrResponse struct {
-	Message string
+func readBody(r *http.Request) []byte {
+	body, err := ioutil.ReadAll(r.Body)
+	helpers.HandleErr(err)
+	return body
+}
+
+func apiResponse(call map[string]interface{}, w http.ResponseWriter) {
+	if call["message"] == "OK" {
+		resp := call
+		json.NewEncoder(w).Encode(resp)
+	} else {
+		resp := &interfaces.ErrResponse{Message: "Wrong username or password"}
+		json.NewEncoder(w).Encode(resp)
+	}
 }
 
 func login(w http.ResponseWriter, r *http.Request) {
-	body, err := ioutil.ReadAll(r.Body)
-	helpers.HandleErr(err)
+	body := readBody(r)
 
 	var formattedBody Login
-	err = json.Unmarshal(body, &formattedBody)
+	err := json.Unmarshal(body, &formattedBody)
 	helpers.HandleErr(err)
-	login := users.Login(formattedBody.Username, formattedBody.Password)
 
-	if login["message"] == "OK" {
-		resp := login
-		json.NewEncoder(w).Encode(resp)
-	} else {
-		resp := ErrResponse{Message: "Wrong credentials"}
-		json.NewEncoder(w).Encode(resp)
-	}
+	login := users.Login(formattedBody.Username, formattedBody.Password)
+	apiResponse(login, w)
 }
 
 func register(w http.ResponseWriter, r *http.Request) {
-	body, err := ioutil.ReadAll(r.Body)
-	helpers.HandleErr(err)
+	body := readBody(r)
 
 	var formattedBody Register
-	err = json.Unmarshal(body, &formattedBody)
+	err := json.Unmarshal(body, &formattedBody)
 	helpers.HandleErr(err)
-	register := users.Register(formattedBody.Username, formattedBody.Email, formattedBody.Password)
 
-	if register["message"] == "OK" {
-		resp := register
-		json.NewEncoder(w).Encode(resp)
-	} else {
-		resp := ErrResponse{Message: "Wrong username or password"}
-		json.NewEncoder(w).Encode(resp)
-	}
+	register := users.Register(formattedBody.Username, formattedBody.Email, formattedBody.Password)
+	apiResponse(register, w)
+}
+
+func getUser(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	userID := vars["id"]
+	auth := r.Header.Get("Authorization")
+	user := users.GetUser(userID, auth)
+	apiResponse(user, w)
 }
 
 func StartApi() {
 	router := mux.NewRouter()
+	router.Use(helpers.PanicHandler)
 	router.HandleFunc("/login", login).Methods("POST")
 	router.HandleFunc("/register", register).Methods("POST")
+	router.HandleFunc("/user/{id}", getUser).Methods("GET")
 	fmt.Println("Server is listening on port: 8888")
 	log.Fatal(http.ListenAndServe(":8888", router))
 }
