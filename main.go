@@ -1,8 +1,8 @@
 package main
 
-import "github.com/jessicaramsa/fintech-banking-app/api"
+import "github.com/jessicaramsa/fintech-banking-app/migrations"
 
 func main() {
-	// migrations.Migrate()
-	api.StartApi()
+	migrations.MigrateTransactions()
+	// api.StartApi()
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/jessicaramsa/fintech-banking-app/helpers"
 	"github.com/jessicaramsa/fintech-banking-app/interfaces"
 	"github.com/jessicaramsa/fintech-banking-app/users"
+	"github.com/jessicaramsa/fintech-banking-app/useraccounts"
 )
 
 type Login struct {
@@ -24,6 +25,13 @@ type Register struct {
 	Password string
 }
 
+type TransactionBody struct {
+	UserId uint
+	From uint
+	To uint
+	Amount int
+}
+
 func readBody(r *http.Request) []byte {
 	body, err := ioutil.ReadAll(r.Body)
 	helpers.HandleErr(err)
@@ -35,7 +43,7 @@ func apiResponse(call map[string]interface{}, w http.ResponseWriter) {
 		resp := call
 		json.NewEncoder(w).Encode(resp)
 	} else {
-		resp := &interfaces.ErrResponse{Message: "Wrong username or password"}
+		resp := call
 		json.NewEncoder(w).Encode(resp)
 	}
 }
@@ -70,11 +78,23 @@ func getUser(w http.ResponseWriter, r *http.Request) {
 	apiResponse(user, w)
 }
 
+func transaction(w http.ResponseWriter, r *http.Request) {
+	body := readBody(r)
+	auth := r.Header.Get("Authorization")
+	var formattedBody TransactionBody
+	err := json.Unmarshal(body, &formattedBody)
+	helpers.HandleErr(err)
+
+	transaction := useraccounts.Transaction(formattedBody.UserId, formattedBody.From, formattedBody.To, formattedBody.Amount, auth)
+	apiResponse(transaction, w)
+}
+
 func StartApi() {
 	router := mux.NewRouter()
 	router.Use(helpers.PanicHandler)
 	router.HandleFunc("/login", login).Methods("POST")
 	router.HandleFunc("/register", register).Methods("POST")
+	router.HandleFunc("/transaction", transaction).Methods("POST")
 	router.HandleFunc("/user/{id}", getUser).Methods("GET")
 	fmt.Println("Server is listening on port: 8888")
 	log.Fatal(http.ListenAndServe(":8888", router))
