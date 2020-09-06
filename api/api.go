@@ -9,7 +9,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/jessicaramsa/fintech-banking-app/helpers"
-	"github.com/jessicaramsa/fintech-banking-app/interfaces"
+	"github.com/jessicaramsa/fintech-banking-app/transactions"
 	"github.com/jessicaramsa/fintech-banking-app/users"
 	"github.com/jessicaramsa/fintech-banking-app/useraccounts"
 )
@@ -89,12 +89,22 @@ func transaction(w http.ResponseWriter, r *http.Request) {
 	apiResponse(transaction, w)
 }
 
+func getMyTransactions(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	userId := vars["userID"]
+	auth := r.Header.Get("Authorization")
+
+	transactions := transactions.GetMyTransactions(userId, auth)
+	apiResponse(transactions, w)
+}
+
 func StartApi() {
 	router := mux.NewRouter()
 	router.Use(helpers.PanicHandler)
 	router.HandleFunc("/login", login).Methods("POST")
 	router.HandleFunc("/register", register).Methods("POST")
 	router.HandleFunc("/transaction", transaction).Methods("POST")
+	router.HandleFunc("/transactions/{userID", getMyTransactions).Methods("GET")
 	router.HandleFunc("/user/{id}", getUser).Methods("GET")
 	fmt.Println("Server is listening on port: 8888")
 	log.Fatal(http.ListenAndServe(":8888", router))

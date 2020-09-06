@@ -3,33 +3,31 @@ package useraccounts
 import (
 	"fmt"
 
+	"github.com/jessicaramsa/fintech-banking-app/database"
 	"github.com/jessicaramsa/fintech-banking-app/helpers"
 	"github.com/jessicaramsa/fintech-banking-app/interfaces"
+	"github.com/jessicaramsa/fintech-banking-app/transactions"
 )
 
 func getAccount(id uint) *interfaces.Account {
-	db := helpers.ConnectDB()
 	account := &interfaces.Account{}
-	if db.Where("id = ? ", id).First(&account).RecordNotFound() {
+	if database.DB.Where("id = ? ", id).First(&account).RecordNotFound() {
 		return nil
 	}
-	defer db.Close()
 	return account
 }
 
 func updateAccount(id uint, amount int) interfaces.ResponseAccount {
-	db := helpers.ConnectDB()
 	account := interfaces.Account{}
 	responseAccount := interfaces.ResponseAccount{}
 
-	db.Where("id = ? ", id).First(&account)
+	database.DB.Where("id = ? ", id).First(&account)
 	account.Balance = uint(amount)
-	db.Save(&account)
+	database.DB.Save(&account)
 
 	responseAccount.ID = account.ID
 	responseAccount.Name = account.Name
 	responseAccount.Balance = int(account.Balance)
-	defer db.Close()
 	return responseAccount
 }
 
