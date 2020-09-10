@@ -104,7 +104,7 @@ func StartApi() {
 	router.HandleFunc("/login", login).Methods("POST")
 	router.HandleFunc("/register", register).Methods("POST")
 	router.HandleFunc("/transaction", transaction).Methods("POST")
-	router.HandleFunc("/transactions/{userID", getMyTransactions).Methods("GET")
+	router.HandleFunc("/transactions/{userID}", getMyTransactions).Methods("GET")
 	router.HandleFunc("/user/{id}", getUser).Methods("GET")
 	fmt.Println("Server is listening on port: 8888")
 	log.Fatal(http.ListenAndServe(":8888", router))
