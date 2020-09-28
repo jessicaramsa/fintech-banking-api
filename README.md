@@ -1,6 +1,6 @@
-# Fintech banking app
+# Fintech banking API
 
-Banking application for users and accounts management
+Banking API for users and accounts management
 
 ### Go modules
 `go mod tidy`
